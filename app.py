@@ -3,7 +3,7 @@ from flask import render_template , request
 from flaskext.mysql import MySQL
 
 app= Flask(__name__)
-
+#asdf
 mysql= MySQL()
 app.config['MYSQL_DATABASE_HOST']='localhost'
 app.config['MYSQL_DATABASE_USER']='root'
