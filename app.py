@@ -1,6 +1,7 @@
 from flask import Flask
-from flask import render_template , request
+from flask import render_template , request, redirect
 from flaskext.mysql import MySQL
+from datetime import datetime
 
 app= Flask(__name__)
 #asdf
@@ -12,17 +13,37 @@ app.config['MYSQL_DATABASE_DB']='sistema2123'
 mysql.init_app(app)
 
 
-
-
 @app.route('/')
 def index():
-    sql="INSERT INTO `empleados` (`id`, `nombre`, `correo`, `foto`) VALUES (NULL, 'dios', 'dioscapo@ciudad.com.ar', 'fotoladios.jpg');"
+    sql="SELECT * FROM `empleados`;"
     conn=mysql.connect()
     cursor=conn.cursor()
     cursor.execute(sql)
     conn.commit()
-    
-    return render_template('empleados/index.html')
+    empleados=cursor.fetchall()
+       
+    return render_template('empleados/index.html',empleados=empleados)
+
+
+@app.route('/destroy/<int:id>')
+def destroy(id):
+    conn=mysql.connect()
+    cursor=conn.cursor()
+
+    cursor.execute("DELETE FROM empleados WHERE id=%s", (id))
+    conn.commit()
+    return redirect('/')
+
+@app.route('/edit/<int:id>')
+def edit(id):
+    conn=mysql.connect()
+    cursor=conn.cursor()
+    cursor.execute("SELECT * FROM empleados WHERE id=%s", (id))
+    empleados=cursor.fetchall()
+    conn.commit()
+    return render_template("empleados/edit.html", empleados=empleados)
+
+
 
 @app.route('/create')
 def create():
@@ -35,8 +56,16 @@ def storage():
    _correo=request.form['txtCorreo']
    _foto=request.files['txtFoto']
    
+   now=datetime.now()
+   tiempo=now.strftime("%Y%H%M%S")
+   
+   if _foto.filename!='':
+        nuevoNombreFoto=tiempo+_foto.filename
+        _foto.save("uploads/"+nuevoNombreFoto)
+   
+   
    sql="INSERT INTO `empleados` (`id`, `nombre`, `correo`, `foto`) VALUES (NULL,%s,%s,%s);"
-   datos=(_nombre, _correo, _foto.filename)
+   datos=(_nombre, _correo, nuevoNombreFoto)
    
    conn=mysql.connect()
    cursor=conn.cursor()
